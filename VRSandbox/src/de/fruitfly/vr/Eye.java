@@ -21,7 +21,7 @@ public class Eye {
 	public void setupOpenGLMVP() {
 		glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        GLU.gluPerspective(60.0f, Constants.ScreenWidth/(float)Constants.ScreenHeight, 0.01f, 1000.0f);
+        GLU.gluPerspective(60.0f, Constants.ScreenWidth*0.5f/(float)Constants.ScreenHeight, 0.01f, 1000.0f);
 				
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();

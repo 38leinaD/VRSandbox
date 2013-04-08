@@ -56,6 +56,10 @@ public class Main {
 
 			p.setupOpenGLMVP();
 
+			glViewport(0, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
+			m.render();
+			
+			glViewport(Constants.ScreenWidth/2, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
 			m.render();
 			
 			Display.sync(60);
