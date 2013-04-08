@@ -21,11 +21,11 @@ public class Eye {
 	public void setupOpenGLMVP() {
 		glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        GLU.gluPerspective(60.0f, Constants.ScreenWidth*0.5f/(float)Constants.ScreenHeight, 0.01f, 1000.0f);
-				
+        GLU.gluPerspective(MathUtil.r2d(Constants.FieldOfViewY), Constants.AspectRatio, 0.01f, 1000.0f);
+
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		
+
 		// Make z point upward; x,y-plane is flat; camera points in positive y direction
 		glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
 		glRotatef(90.0f, 0.0f, 0.0f, 1.0f);

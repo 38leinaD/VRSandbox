@@ -17,6 +17,11 @@ public class Player {
 	
 	public Player(InputHandler input) {
 		this.input = input;
+		
+		position.set(6.2200637f, -5.4675417f, 1.7f);
+		yaw = -3.853997f;
+		pitch = 0.058000006f;
+		roll = 0.0f;
 	}
 	
 	public void update() {
@@ -62,7 +67,6 @@ public class Player {
 			yaw = yaw - 0.03f * gps.rx;
 			pitch = pitch - 0.03f * gps.ry;
 		}	
-
 	}
 
 	private Eye eye = new Eye();
@@ -73,10 +77,20 @@ public class Player {
 	
 	private Matrix4f m = new Matrix4f();
 	
-	public void setupOpenGLMVP() {
+	public void setupOpenGLMVP(int ee) {
 		
-		// Cyclopse
 		eye.getPosition().set(position);
+		
+		Vector3f faceDir = new Vector3f((float)Math.cos(yaw), (float)Math.sin(yaw), 0.0f);
+		Vector3f interEyeAxis = new Vector3f(faceDir.y, -faceDir.x, 0.0f);
+		if (ee == Eye.Left) {
+			interEyeAxis.scale(-Constants.InterpupillaryDistance/2.0f);
+			Vector3f.add(eye.getPosition(), interEyeAxis, eye.getPosition());
+		}
+		else {
+			interEyeAxis.scale(Constants.InterpupillaryDistance/2.0f);
+			Vector3f.add(eye.getPosition(), interEyeAxis, eye.getPosition());
+		}
 			
 		eye.setYaw(yaw);
 		eye.setRoll(roll);

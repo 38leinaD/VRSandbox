@@ -54,12 +54,13 @@ public class Main {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_TEXTURE_2D);
 
-			p.setupOpenGLMVP();
 
 			glViewport(0, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
+			p.setupOpenGLMVP(Eye.Left);
 			m.render();
 			
 			glViewport(Constants.ScreenWidth/2, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
+			p.setupOpenGLMVP(Eye.Right);
 			m.render();
 			
 			Display.sync(60);
