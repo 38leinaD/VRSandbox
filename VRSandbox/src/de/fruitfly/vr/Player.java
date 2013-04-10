@@ -1,7 +1,10 @@
 package de.fruitfly.vr;
 
+import static org.lwjgl.opengl.GL11.*;
+
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
+import org.lwjgl.util.glu.GLU;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
@@ -69,7 +72,8 @@ public class Player {
 		}	
 	}
 
-	private Eye eye = new Eye();
+	public static final int LeftEye = 0;
+	public static final int RightEye = 1;
 
 	private Vector3f YawAxis = new Vector3f(0.0f, 0.0f, 1.0f);
 	private Vector3f PitchAxis = new Vector3f(1.0f, 0.0f, 0.0f);
@@ -77,26 +81,26 @@ public class Player {
 	
 	private Matrix4f m = new Matrix4f();
 	
-	public void setupOpenGLMVP(int ee) {
+	public void setupOpenGLMVP(int eye) {
 		
-		eye.getPosition().set(position);
+		glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        GLU.gluPerspective(MathUtil.r2d(Constants.FieldOfViewY), Constants.AspectRatio, 0.01f, 1000.0f);
+
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		// Make z point upward; x,y-plane is flat; camera points in positive y direction
+		glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
+		glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
+
+		glTranslatef(0.0f, (eye == LeftEye ? -1 : 1) * Constants.InterpupillaryDistance/2.0f, 0.0f);
 		
-		Vector3f faceDir = new Vector3f((float)Math.cos(yaw), (float)Math.sin(yaw), 0.0f);
-		Vector3f interEyeAxis = new Vector3f(faceDir.y, -faceDir.x, 0.0f);
-		if (ee == Eye.Left) {
-			interEyeAxis.scale(-Constants.InterpupillaryDistance/2.0f);
-			Vector3f.add(eye.getPosition(), interEyeAxis, eye.getPosition());
-		}
-		else {
-			interEyeAxis.scale(Constants.InterpupillaryDistance/2.0f);
-			Vector3f.add(eye.getPosition(), interEyeAxis, eye.getPosition());
-		}
-			
-		eye.setYaw(yaw);
-		eye.setRoll(roll);
-		eye.setPitch(pitch);
+		glRotatef(-MathUtil.r2d(roll), 1.0f, 0.0f, 0.0f);
+		glRotatef(-MathUtil.r2d(pitch), 0.0f, 1.0f, 0.0f);
+		glRotatef(-MathUtil.r2d(yaw), 0.0f, 0.0f, 1.0f);
 		
-		eye.setupOpenGLMVP();
+		glTranslatef(-position.x, -position.y, -position.z);
 	}
 
 	public float getYaw() {

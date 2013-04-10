@@ -56,11 +56,11 @@ public class Main {
 
 
 			glViewport(0, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
-			p.setupOpenGLMVP(Eye.Left);
+			p.setupOpenGLMVP(Player.LeftEye);
 			m.render();
 			
 			glViewport(Constants.ScreenWidth/2, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
-			p.setupOpenGLMVP(Eye.Right);
+			p.setupOpenGLMVP(Player.RightEye);
 			m.render();
 			
 			Display.sync(60);
