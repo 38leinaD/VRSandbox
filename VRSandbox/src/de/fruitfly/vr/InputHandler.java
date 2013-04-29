@@ -24,6 +24,7 @@ public class InputHandler {
 	private Controller controller = null;
 	private GamepadState initialGamepadState = new GamepadState();
 	private GamepadState gamepadState = new GamepadState();
+	private HeadTracker headTracker;
 	
 	public InputHandler() {
 		for (int i=0; i<keyStates.length; i++) {
@@ -57,6 +58,7 @@ public class InputHandler {
         	}
         }
         
+        headTracker = new HeadTracker();
         //Mouse.setGrabbed(true);
 	}
 	
@@ -84,6 +86,8 @@ public class InputHandler {
 				}
 			}
 		}
+		
+		headTracker.poll();
 	}
 	
 	public boolean isKeyDown(int key) {
@@ -104,5 +108,13 @@ public class InputHandler {
 	
 	public GamepadState getGamepadState() {
 		return gamepadState;
+	}
+	
+	public HeadTracker getHeadTracker() {
+		return headTracker;
+	}
+
+	public void setHeadTracker(HeadTracker headTracker) {
+		this.headTracker = headTracker;		
 	}
 }

@@ -2,6 +2,9 @@ package de.fruitfly.vr;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.nio.FloatBuffer;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.util.glu.GLU;
@@ -12,7 +15,7 @@ import org.lwjgl.util.vector.Vector4f;
 import de.fruitfly.vr.InputHandler.GamepadState;
 
 public class Player {
-
+	private float bodyYaw = 0.0f;
 	private float yaw = 0.0f, pitch = 0.0f, roll = 0.0f;
 	private Vector3f position = new Vector3f(0.0f, 0.0f, 1.7f);
 	
@@ -22,6 +25,7 @@ public class Player {
 		this.input = input;
 		
 		position.set(6.2200637f, -5.4675417f, 1.7f);
+		bodyYaw = -3.853997f;
 		yaw = -3.853997f;
 		pitch = 0.058000006f;
 		roll = 0.0f;
@@ -30,28 +34,20 @@ public class Player {
 	public void update() {
 		if (input.isKeyDown(Keyboard.KEY_LEFT)) {
 			//v.setYaw(v.getYaw() + 0.05f);
-			position.x = (position.x - 0.1f * (float) (Math.sin(yaw)));
-			position.y = (position.y + 0.1f * (float) (Math.cos(yaw)));
+			position.x = (position.x - 0.1f * (float) (Math.sin(bodyYaw)));
+			position.y = (position.y + 0.1f * (float) (Math.cos(bodyYaw)));
 		}
 		if (input.isKeyDown(Keyboard.KEY_RIGHT)) {
-			position.x = (position.x + 0.1f * (float) (Math.sin(yaw)));
-			position.y = (position.y - 0.1f * (float) (Math.cos(yaw)));
+			position.x = (position.x + 0.1f * (float) (Math.sin(bodyYaw)));
+			position.y = (position.y - 0.1f * (float) (Math.cos(bodyYaw)));
 		}
 		if (input.isKeyDown(Keyboard.KEY_UP)) {
-			position.x = (position.x + 0.1f * (float) (Math.cos(yaw)));
-			position.y = (position.y + 0.1f * (float) (Math.sin(yaw)));
+			position.x = (position.x + 0.1f * (float) (Math.cos(bodyYaw)));
+			position.y = (position.y + 0.1f * (float) (Math.sin(bodyYaw)));
 		}
 		if (input.isKeyDown(Keyboard.KEY_DOWN)) {
-			position.x = (position.x - 0.1f * (float) (Math.cos(yaw)));
-			position.y = (position.y - 0.1f * (float) (Math.sin(yaw)));
-		}
-		
-		if (Mouse.isGrabbed()) {
-			float dx = Mouse.getDX() / 500.0f;
-			float dy = Mouse.getDY() / 500.0f;
-			
-			yaw = yaw - dx;
-			pitch = pitch - dy;
+			position.x = (position.x - 0.1f * (float) (Math.cos(bodyYaw)));
+			position.y = (position.y - 0.1f * (float) (Math.sin(bodyYaw)));
 		}
 		
 		if (input.isGamepadActive()) {
@@ -59,17 +55,23 @@ public class Player {
 			
 			// Left analog stick
 			// Move forward
-			position.x = (position.x + 0.1f * gps.ly * (float) (Math.cos(yaw)));
-			position.y = (position.y + 0.1f * gps.ly * (float) (Math.sin(yaw)));
+			position.x = (position.x + 0.1f * gps.ly * (float) (Math.cos(bodyYaw)));
+			position.y = (position.y + 0.1f * gps.ly * (float) (Math.sin(bodyYaw)));
 			
 			// Strafe
-			position.x = (position.x + 0.1f * gps.lx * (float) (Math.sin(yaw)));
-			position.y = (position.y - 0.1f * gps.lx * (float) (Math.cos(yaw)));
+			position.x = (position.x + 0.1f * gps.lx * (float) (Math.sin(bodyYaw)));
+			position.y = (position.y - 0.1f * gps.lx * (float) (Math.cos(bodyYaw)));
 			
 			// Right analog stick
-			yaw = yaw - 0.03f * gps.rx;
-			pitch = pitch - 0.03f * gps.ry;
+			bodyYaw = bodyYaw - 0.03f * gps.rx;
+			//pitch = pitch - 0.03f * gps.ry;
 		}	
+		
+		HeadTracker ht = input.getHeadTracker();
+		
+		yaw = ht.getYaw();
+		pitch = ht.getPitch();
+		roll = ht.getRoll();
 	}
 
 	public static final int LeftEye = 0;
@@ -80,13 +82,26 @@ public class Player {
 	private Vector3f RollAxis = new Vector3f(0.0f, 1.0f, 0.0f);
 	
 	private Matrix4f m = new Matrix4f();
+	private FloatBuffer m_fb = BufferUtils.createFloatBuffer(16);
 	
 	public void setupOpenGLMVP(int eye) {
 		
+		//MatrixUtil.perspectiveWithEyeCenter(m, MathUtil.r2d(Constants.FieldOfViewY), Constants.AspectRatio, 0.01f, 1000.0f, (eye == LeftEye ? 1 : -1) *Constants.h);
+		//m.transpose();
+		//m.store(m_fb);
+		//m_fb.rewind();
 		glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        GLU.gluPerspective(MathUtil.r2d(Constants.FieldOfViewY), Constants.AspectRatio, 0.01f, 1000.0f);
-
+		glLoadIdentity();
+        //glLoadMatrix(m_fb);
+        
+		if (eye == Player.LeftEye) {
+			glTranslatef(-Constants.h, 0.0f, 0.0f);
+		}
+		else {
+			glTranslatef(Constants.h, 0.0f, 0.0f);   
+		}
+		GLU.gluPerspective(MathUtil.r2d(Constants.FieldOfViewY), Constants.AspectRatio, 0.01f, 1000.0f);
+		
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
 
@@ -96,9 +111,9 @@ public class Player {
 
 		glTranslatef(0.0f, (eye == LeftEye ? -1 : 1) * Constants.InterpupillaryDistance/2.0f, 0.0f);
 		
-		glRotatef(-MathUtil.r2d(roll), 1.0f, 0.0f, 0.0f);
-		glRotatef(-MathUtil.r2d(pitch), 0.0f, 1.0f, 0.0f);
-		glRotatef(-MathUtil.r2d(yaw), 0.0f, 0.0f, 1.0f);
+		glRotatef(-MathUtil.r2d(-roll), 1.0f, 0.0f, 0.0f);
+		glRotatef(-MathUtil.r2d(-pitch), 0.0f, 1.0f, 0.0f);
+		glRotatef(-MathUtil.r2d(yaw + bodyYaw), 0.0f, 0.0f, 1.0f);
 		
 		glTranslatef(-position.x, -position.y, -position.z);
 	}
