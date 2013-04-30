@@ -35,8 +35,8 @@ public class Main {
 		try {
 			modes = Display.getAvailableDisplayModes();
 			for (DisplayMode dm : modes) {
-				if (dm.getWidth() == Constants.ScreenWidth
-						&& dm.getHeight() == Constants.ScreenHeight
+				if (dm.getWidth() == Constants.HResolution
+						&& dm.getHeight() == Constants.VResolution
 						&& dm.isFullscreenCapable()
 						&& dm.getBitsPerPixel() == 32
 						&& dm.getFrequency() == 60) {
@@ -69,8 +69,8 @@ public class Main {
 	public static void main(String[] args) {
         try {
         	fullscreenDisplayMode = getFullScreenMode();
-        	windowedDisplayMode = new DisplayMode(Constants.ScreenWidth,
-					Constants.ScreenHeight);
+        	windowedDisplayMode = new DisplayMode(Constants.HResolution,
+					Constants.VResolution);
 			Display.setDisplayMode(windowedDisplayMode);
 			Display.setTitle("VRSandbox");
 			defaultWindowLocaton = new Point(50, 50);
@@ -82,7 +82,7 @@ public class Main {
 			e.printStackTrace();
 		}
 
-        renderer = new BarrelDistortionRenderer(Constants.ScreenWidth, Constants.ScreenHeight);
+        renderer = new BarrelDistortionRenderer(Constants.HResolution, Constants.VResolution, Constants.RenderSurfaceScale);
         
         hmd = new OculusRift();
 		hmd.init();
@@ -149,11 +149,11 @@ public class Main {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			glEnable(GL_TEXTURE_2D);
 
-			glViewport(0, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
+			renderer.setViewportForEye(Player.LeftEye);
 			player.setupOpenGLMVP(Player.LeftEye);
 			m.render();
 			
-			glViewport(Constants.ScreenWidth/2, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
+			renderer.setViewportForEye(Player.RightEye);
 			player.setupOpenGLMVP(Player.RightEye);
 			m.render();
 			renderer.endOffScreenRenderPass();

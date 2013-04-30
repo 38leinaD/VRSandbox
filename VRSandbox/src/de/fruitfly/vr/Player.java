@@ -18,9 +18,9 @@ public class Player {
 	private float bodyYaw = 0.0f;
 	private float yaw = 0.0f, pitch = 0.0f, roll = 0.0f;
 	
-	private float floorToNeckZ = 1.78f;
-	private float neckToEyeZ = 0.03f;
-	private float spineToFaceX = 0.08f;
+	private float floorToNeckZ = 1.70f;
+	private float neckToEyeZ = 0.15f;
+	private float spineToFaceX = 0.09f;
 	
 	private Vector3f position = new Vector3f(0.0f, 0.0f, floorToNeckZ); // This is the position on the neck used as the rotation center
 	
@@ -38,13 +38,10 @@ public class Player {
 	
 	public void update() {
 		if (input.isKeyDown(Keyboard.KEY_LEFT)) {
-			//v.setYaw(v.getYaw() + 0.05f);
-			position.x = (position.x - 0.04f * (float) (Math.sin(bodyYaw)));
-			position.y = (position.y + 0.04f * (float) (Math.cos(bodyYaw)));
+			bodyYaw = bodyYaw + 0.02f;
 		}
 		if (input.isKeyDown(Keyboard.KEY_RIGHT)) {
-			position.x = (position.x + 0.04f * (float) (Math.sin(bodyYaw)));
-			position.y = (position.y - 0.04f * (float) (Math.cos(bodyYaw)));
+			bodyYaw = bodyYaw - 0.02f;
 		}
 		if (input.isKeyDown(Keyboard.KEY_UP)) {
 			position.x = (position.x + 0.04f * (float) (Math.cos(bodyYaw)));
@@ -96,12 +93,17 @@ public class Player {
 		glLoadIdentity();
         
 		if (eye == Player.LeftEye) {
-			glTranslatef(-Constants.h, 0.0f, 0.0f);
+			glTranslatef(Constants.h, 0.0f, 0.0f);
 		}
 		else {
-			glTranslatef(Constants.h, 0.0f, 0.0f);   
+			glTranslatef(-Constants.h, 0.0f, 0.0f);   
 		}
-		GLU.gluPerspective(MathUtil.r2d(Constants.FieldOfViewY), Constants.AspectRatio, 0.01f, 1000.0f);
+
+		float scale = BarrelDistortionRenderer.distfunc(1 + Constants.LensCenter);
+		float xx = scale * Constants.VScreenSize/2.0f;
+		float fov = (float) (2 * Math.atan2(xx, Constants.EyeToScreenDistance));
+		
+		GLU.gluPerspective(MathUtil.r2d(fov), Constants.AspectRatio, 0.01f, 1000.0f);
 		
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();

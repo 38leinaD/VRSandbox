@@ -20,6 +20,9 @@ public class BarrelDistortionRenderer {
     protected int framebufferID;
     protected int depthRenderBufferID;
     
+    private int width, height;
+    private float scale;
+    
     private int LensCenterLocation;
     private int ScreenCenterLocation;
     private int ScaleLocation;
@@ -67,9 +70,13 @@ public class BarrelDistortionRenderer {
             "       gl_FragColor = texture2D(tex, tc);\n" +
             "}";
 
-    public BarrelDistortionRenderer(int screenWidth, int screenHeight) {
+    public BarrelDistortionRenderer(int screenWidth, int screenHeight, float scale) {
+    	this.width = (int) (screenWidth * scale);
+    	this.height = (int) (screenHeight * scale);
+    	this.scale = scale;
+    	
         distortionShader = initShaders(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE);
-        initFBO(screenWidth, screenHeight);
+        initFBO(this.width, this.height);
         Util.checkGLError();
         
         LensCenterLocation = glGetUniformLocation(distortionShader, "LensCenter");
@@ -86,19 +93,19 @@ public class BarrelDistortionRenderer {
         setShader(distortionShader);
     }
 
-    private void initFBO(int screenWidth, int screenHeight) {
+    private void initFBO(int surfaceWidth, int surfaceHeight) {
         framebufferID = glGenFramebuffers();                                                                                
         colorTextureID = glGenTextures();                                                                                               
         depthRenderBufferID = glGenRenderbuffers();                                                                  
 
-        System.out.println("Creating offscreen render target of dimensions " + screenWidth + "x" + screenHeight);
+        System.out.println("Creating offscreen render target of dimensions " + surfaceWidth + "x" + surfaceHeight);
         
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);                                               
 
         // initialize color texture
         glBindTexture(GL_TEXTURE_2D, colorTextureID);                                                                  
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);                               
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, screenWidth, screenHeight, 0,GL_RGBA, GL_INT, (java.nio.ByteBuffer) null); 
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, surfaceWidth, surfaceHeight, 0,GL_RGBA, GL_INT, (java.nio.ByteBuffer) null); 
         //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         //glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
@@ -106,7 +113,7 @@ public class BarrelDistortionRenderer {
 
         // initialize depth renderbuffer
         glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBufferID);                               
-        glRenderbufferStorage(GL_RENDERBUFFER, GL14.GL_DEPTH_COMPONENT24, screenWidth, screenHeight);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL14.GL_DEPTH_COMPONENT24, surfaceWidth, surfaceHeight);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,GL_RENDERBUFFER, depthRenderBufferID); 
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);     
@@ -127,7 +134,18 @@ public class BarrelDistortionRenderer {
         Util.checkGLError();
         glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
         Util.checkGLError();
-        
+    }
+    
+    public void setViewportForEye(int eye) {
+    	if (eye == Player.LeftEye) {
+			glViewport(0, 0, width/2, height);
+    	}
+    	else if (eye == Player.RightEye) {
+			glViewport(width/2, 0, width/2, height);
+    	}
+    	else {
+    		throw new RuntimeException("Unknown eye=" + eye);
+    	}
     }
     
     public void endOffScreenRenderPass() {
@@ -162,22 +180,31 @@ public class BarrelDistortionRenderer {
         usedShader = shader;
     }
     
+    public static float distfunc(float r) {
+    	float r2 = r * r; // r^2
+    	float r4 = r2 * r2; // r^4
+    	float r6 = r4 * r2; // r^6
+    	return Constants.K0 + Constants.K1 * r2 + Constants.K2 * r4 + Constants.K3 * r6;
+    }
+    
     protected void renderEye(int eye, float x, float y, float w, float h) {
-        
-        if (usedShader == distortionShader) {
-            float as = (Constants.ScreenWidth/2)/(float)Constants.ScreenHeight;
-            
-            float scaleFactor = 1.0f;
-            
-            this.validate();
+
+    	if (usedShader == distortionShader) {
+        	float as = (Constants.HResolution/2)/(float)Constants.VResolution;
+
+        	this.validate();
             Util.checkGLError();
-            
+           
             if (eye == Player.LeftEye) {
-            	 glUniform2f(LensCenterLocation, x + w -(1- 2*Constants.LensSeperationDistance/Constants.ScreenWidthMeters), y + h*0.5f);
+            	 glUniform2f(LensCenterLocation, x + (w + Constants.LensCenter * 0.5f) * 0.5f, y + h*0.5f);
             }
             else {
-            	 glUniform2f(LensCenterLocation, x + (1- 2*Constants.LensSeperationDistance/Constants.ScreenWidthMeters), y + h*0.5f);
+            	glUniform2f(LensCenterLocation, x + (w - Constants.LensCenter * 0.5f) * 0.5f, y + h*0.5f);
             }
+            float r = 1 + Constants.LensCenter;
+            float scale = distfunc(r);
+            
+            float scaleFactor = 1f/ scale;
             
             glUniform2f(ScreenCenterLocation, x + w*0.5f, y + h*0.5f);
             glUniform2f(ScaleLocation, (w/2.0f) * scaleFactor, (h/2.0f) * scaleFactor * as);
