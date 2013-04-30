@@ -83,7 +83,7 @@ public class BarrelDistortionRenderer {
         noDistortionShader = initShaders(VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE_NO_DISTORTION);
         Util.checkGLError();
         
-        setShader(noDistortionShader);
+        setShader(distortionShader);
     }
 
     private void initFBO(int screenWidth, int screenHeight) {
@@ -144,11 +144,7 @@ public class BarrelDistortionRenderer {
         glUseProgram(usedShader);
         Util.checkGLError();
 
-        //glEnable(GL_TEXTURE_2D);    
         glDisable(GL_DEPTH_TEST);
-
-        //glClearColor (1.0f, 0.0f, 0.0f, 1.0f);
-        //glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glBindTexture(GL_TEXTURE_2D, colorTextureID);   
 
@@ -165,8 +161,6 @@ public class BarrelDistortionRenderer {
     protected void setShader(int shader) {
         usedShader = shader;
     }
-    
-
     
     protected void renderEye(int eye, float x, float y, float w, float h) {
         
@@ -192,7 +186,6 @@ public class BarrelDistortionRenderer {
             glUniform4f(HmdWarpParamLocation, Constants.K0, Constants.K1, Constants.K2, Constants.K3);
         }
         
-       
         if (eye == Player.LeftEye) {
             glBegin(GL_TRIANGLE_STRIP);
                 glTexCoord2f(0.0f, 0.0f);   glVertex2f(-1.0f, -1.0f);

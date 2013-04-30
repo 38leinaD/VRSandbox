@@ -2,6 +2,9 @@ package de.fruitfly.vr;
 
 import static org.lwjgl.opengl.GL11.*;
 
+import java.awt.Dimension;
+import java.awt.Point;
+
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
@@ -20,6 +23,8 @@ public class Main {
 	private static BarrelDistortionRenderer renderer;
 	private static DisplayMode windowedDisplayMode;
 	private static DisplayMode fullscreenDisplayMode;
+	private static Point defaultWindowLocaton;
+	private static boolean windowIsAtExtendedScreenLocation = false;
 	
 	public static OculusRift hmd;
 	
@@ -42,7 +47,7 @@ public class Main {
 		return null;
 	}
 	
-	private static void toggleDisplayMode() {
+	private static void toggleFullscreenMode() {
 		try {
 			if (Display.getDisplayMode() == windowedDisplayMode) {
 				Display.setDisplayModeAndFullscreen(fullscreenDisplayMode);
@@ -62,7 +67,9 @@ public class Main {
 					Constants.ScreenHeight);
 			Display.setDisplayMode(windowedDisplayMode);
 			Display.setTitle("VRSandbox");
-			//Display.setLocation(2000, 200);
+			defaultWindowLocaton = new Point(50, 50);
+			Display.setLocation(defaultWindowLocaton.x, defaultWindowLocaton.y);
+			
 			PixelFormat pixelFormat = new PixelFormat(8, 8, 8);
 			Display.create(pixelFormat);
 		} catch (LWJGLException e) {
@@ -94,12 +101,15 @@ public class Main {
 				Mouse.setGrabbed(false);
 			}
 			
+			// If monitors are mirroring, use this to get into fullscreen
 			if (input.isKeyPressed(Keyboard.KEY_F1)) {
-				toggleDisplayMode();
+				toggleFullscreenMode();
 			}
 			
+			// If rift is a secondary/extended monitor,
+			// use this to move window to this monitor
 			if (input.isKeyPressed(Keyboard.KEY_F5)) {
-				Display.setLocation(1917, -22);
+				toggleMoveWindowToRiftAsSecondaryScreen();
 			}
 			
 			if (input.isKeyPressed(Keyboard.KEY_F2)) {
@@ -134,5 +144,17 @@ public class Main {
 			Display.sync(60);
 			Display.update();
 		}
+	}
+
+	private static void toggleMoveWindowToRiftAsSecondaryScreen() {
+		if (!windowIsAtExtendedScreenLocation) {
+			Display.setLocation(1917, -22); // Make this general; at the moment assumes my monitor with 1920 pixel width and title bar of height 22 pixel
+			windowIsAtExtendedScreenLocation = true;
+		}
+		else {
+			Display.setLocation(defaultWindowLocaton.x, defaultWindowLocaton.y);
+			windowIsAtExtendedScreenLocation = false;
+		}
+		
 	}
 }
