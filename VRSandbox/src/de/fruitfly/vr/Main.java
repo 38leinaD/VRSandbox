@@ -20,6 +20,8 @@ import de.fruitfly.vr.InputHandler.GamepadState;
 public class Main {
 	
 	public static InputHandler input;
+	public static Player player;
+	
 	private static BarrelDistortionRenderer renderer;
 	private static DisplayMode windowedDisplayMode;
 	private static DisplayMode fullscreenDisplayMode;
@@ -60,6 +62,10 @@ public class Main {
 		}
 	}
 	
+	private static long tickAccumulator = 0;
+	private static long lastNanos;
+	public static long tick = 0;
+	
 	public static void main(String[] args) {
         try {
         	fullscreenDisplayMode = getFullScreenMode();
@@ -91,8 +97,10 @@ public class Main {
 		}
         
 		Model m = new Model("/world");
-		Player p = new Player(input);
+		player = new Player(input);
 
+		lastNanos = System.nanoTime();
+		
 		while (!Display.isCloseRequested()) {
 			input.fetchEvents();
 			
@@ -120,8 +128,19 @@ public class Main {
 				Mouse.setGrabbed(true);
 			}
 			
-			p.update();
-
+			// Update World
+			long nanos = System.nanoTime();
+			long deltaNanos = nanos - lastNanos;
+		
+			tickAccumulator += deltaNanos;
+			while (tickAccumulator >= Constants.nanoSecondsPerTick) {
+				tick();
+				tickAccumulator-=Constants.nanoSecondsPerTick;
+				tick++;
+			}
+			lastNanos = nanos;
+			
+			// Render World
 			renderer.beginOffScreenRenderPass();
 			
 			glEnable(GL_DEPTH_TEST);
@@ -131,19 +150,23 @@ public class Main {
 			glEnable(GL_TEXTURE_2D);
 
 			glViewport(0, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
-			p.setupOpenGLMVP(Player.LeftEye);
+			player.setupOpenGLMVP(Player.LeftEye);
 			m.render();
 			
 			glViewport(Constants.ScreenWidth/2, 0, Constants.ScreenWidth/2, Constants.ScreenHeight);
-			p.setupOpenGLMVP(Player.RightEye);
+			player.setupOpenGLMVP(Player.RightEye);
 			m.render();
 			renderer.endOffScreenRenderPass();
 			
 			renderer.renderToScreen();
 			
-			Display.sync(60);
+			//Display.sync(60);
 			Display.update();
 		}
+	}
+
+	private static void tick() {
+		player.update();
 	}
 
 	private static void toggleMoveWindowToRiftAsSecondaryScreen() {
@@ -155,6 +178,5 @@ public class Main {
 			Display.setLocation(defaultWindowLocaton.x, defaultWindowLocaton.y);
 			windowIsAtExtendedScreenLocation = false;
 		}
-		
 	}
 }

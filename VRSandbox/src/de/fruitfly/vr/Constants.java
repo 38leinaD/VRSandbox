@@ -1,6 +1,8 @@
 package de.fruitfly.vr;
 
 public class Constants {
+	public static long nanoSecondsPerTick = (long) (1e9/60);
+	
 	public static int ScreenWidth = 1280;
 	public static int ScreenHeight = 800;
 	
