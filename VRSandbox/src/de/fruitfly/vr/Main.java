@@ -160,7 +160,7 @@ public class Main {
 			
 			renderer.renderToScreen();
 			
-			//Display.sync(60);
+			Display.sync(60);
 			Display.update();
 		}
 	}
